@@ -69,4 +69,56 @@ router.post(
   }
 );
 
+
+
+
+
+//user authentication page:/api/auth/login  -> login not required (login page keliye login thodi na karega)
+router.post(('/login'),[
+  body('email','Enter a valid email id').isEmail(),
+  body('password','Enter a valid password of atleast 8 characters').isLength({min:7})
+],async (req,res) => {
+const errors=validationResult(req);
+if(!errors.isEmpty()) {
+ return  res.status(400).json({error:errors.array()});
+}
+const {email,password}= req.body;
+
+try {
+let user=await User.findOne({email});
+if(!user) {
+  return res.status(400).json({error:"Please try to login with appropriate credential"});
+}
+const passwordCompare= await bcrypt.compare(password, user.password);
+//if password doesnt match
+if(!passwordCompare) {
+  return res.status(400).json({error:"Please try to login with appropriate credential"});
+}
+//if its matching do the same process to send the token
+const data= {
+  user:{
+    id:user.id,
+  }
+}
+
+const JWT_SECRETE="peace bro";
+const authdata=jwt.sign(data,JWT_SECRETE);
+res.send({Token:authdata});
+
+
+
+
+}
+catch (error) {
+  if (error.code === 11000) {
+    return res
+      .status(400)
+      .json({ error: "Email already exists in the database" });
+  }
+  console.error(error);
+  res.status(300).json({ error: "Server error" });
+}
+
+})
+
 module.exports = router;
