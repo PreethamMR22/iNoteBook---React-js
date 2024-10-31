@@ -40,7 +40,7 @@ router.post(
         password: secPass,
       });
 
-      res.json(user);
+      // res.json(user);
       
       
       //returning jwt- json web token
@@ -53,7 +53,7 @@ router.post(
       const authtoken = jwt.sign(data, JWT_SECRETE);
       
       // res.json(user)
-     console.log(authtoken);
+     res.send({Token: authtoken});
 
 
 
