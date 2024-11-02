@@ -4,8 +4,8 @@ const User = require("../modules/User");
 const { body, validationResult } = require("express-validator");
 const bcrypt=require('bcryptjs');
 const jwt=require('jsonwebtoken');
-
-//create user using POST method: api/auth/createuser NO LOGIN REQUIRED
+const fetchUser=require('../middleware/fetchUser');
+//ROUTE 1: create user using POST method: api/auth/createuser NO LOGIN REQUIRED
 router.post(
   "/createuser",
   [
@@ -73,7 +73,7 @@ router.post(
 
 
 
-//user authentication page:/api/auth/login  -> login not required (login page keliye login thodi na karega)
+//ROUTE 2: user authentication page:/api/auth/login  -> login not required (login page keliye login thodi na karega)
 router.post(('/login'),[
   body('email','Enter a valid email id').isEmail(),
   body('password','Enter a valid password of atleast 8 characters').isLength({min:7})
@@ -119,6 +119,28 @@ catch (error) {
   res.status(300).json({ error: "Server error" });
 }
 
+})  
+
+ 
+
+//ROUTE 3: Get logged in user details POST: api/auth/getuser -> Login requried
+router.post('/getuser', fetchUser,async (req,res)=> {
+  try {
+    const userId=req.user.id;
+    const user=await User.findById(userId).select("-password");
+    res.json({user});
+    
+  } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "Email already exists in the database" });
+    }
+    console.error(error);
+    res.status(300).json({ error: "Server error" });
+  }
 })
+
+
 
 module.exports = router;
